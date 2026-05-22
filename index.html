@@ -321,16 +321,16 @@
 
     function resetSettings() {
             if (!confirm('設定を初期値に戻しますか？')) return;
-    
+
             // 設定を初期値で上書き
             localStorage.setItem(CONFIG.storageKey, JSON.stringify(CONFIG.init));
-    
+
             // 画面の入力値を更新
             document.getElementById('bonus').value = formatNum(CONFIG.init.bonus);
             document.getElementById('hp_h').value  = formatNum(CONFIG.init.hp_h);
             document.getElementById('hp_vh').value = formatNum(CONFIG.init.hp_vh);
             document.getElementById('sim_mode').value = CONFIG.init.mode;
-    
+
             // 再計算と表示更新
             updateAll();
         }
@@ -433,15 +433,26 @@
         const simMode = document.getElementById('sim_mode').value;
         const hpH = parseNum(document.getElementById('hp_h').value);
         const hpVH = parseNum(document.getElementById('hp_vh').value);
-        const data = {
-            H:  { ...CONFIG.stats.H, hp: hpH },
-            VH: { ...CONFIG.stats.VH, hp: hpVH }
+
+        // 各難易度の基本値と上限値の定義
+        const specs = {
+            H:  { base: 85000, max: 170000, hp: hpH, ticket: CONFIG.stats.H.ticket, gp: CONFIG.stats.H.gp },
+            VH: { base: 300000, max: 600000, hp: hpVH, ticket: CONFIG.stats.VH.ticket, gp: CONFIG.stats.VH.gp }
         };
-        const target = data[simMode];
-        const dmgRate = target.hp > 0 ? Math.min(curDmg / target.hp, 2.0) : 0;
-        const resScore = target.score * dmgRate * bonus;
-        const resGP = target.gp * (dmgRate > 1.0 ? 1.0 : dmgRate);
+        const target = specs[simMode];
+
+        // ダメージ割合
+        const dmgRate = target.hp > 0 ? (curDmg / target.hp) : 0;
+
+        // スコア計算：(基本スコア * ダメージ割合 * ボーナス) を行い、最後に上限(max)を適用
+        const rawScore = target.base * dmgRate * bonus;
+        const resScore = Math.min(rawScore, target.max);
+
+        // GPはダメージ割合分で上限は1.0倍(100%)
+        const resGP = target.gp * Math.min(dmgRate, 1.0);
         const scorePerTicket = resScore / target.ticket;
+
+        // ...以下、表示更新のロジック（sim_resultのinnerHTML更新部分）
         let compareText = "";
         if(simMode === "VH") {
             const hMaxEff = (CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket;
