@@ -5,481 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ダメージシミュレーター</title>
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --border-color: #e2e8f0;
-        }
-
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.6;
-            margin: 0;
-            padding: 0; /* paddingをcontainer側に移動 */
-        }
-
-        /* 固定エリアのラッパー */
-        .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            background-color: var(--bg-color);
-            padding: 20px 20px 10px 20px;
-            box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1);
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px 20px 20px;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            margin-bottom: 10px;
-            gap: 10px;
-            font-size: 0.875rem;
-            font-weight: bold;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 22px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #cbd5e1;
-            transition: .4s;
-            border-radius: 22px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--primary-color);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
-
-        header h1 {
-            text-align: center;
-            margin: 0 0 15px 0;
-            font-size: 1.5rem;
-        }
-
-        .card {
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            margin-bottom: 20px;
-        }
-
-        /* 固定されるカードの余白調整 */
-        .sticky-header .card {
-            margin-bottom: 0;
-        }
-
-        h2 {
-            margin-top: 0;
-            font-size: 1.1rem;
-            border-left: 4px solid var(--primary-color);
-            padding-left: 10px;
-            color: #1e40af;
-            margin-bottom: 15px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        .input-group {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .styled-input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            background-color: #fff;
-            cursor: pointer;
-        }
-
-        .styled-input:hover { border-color: #cbd5e1; background-color: #fdfdfd; }
-        .styled-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-
-        .result-box {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 0.85rem;
-        }
-
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background: #f1f5f9; color: #475569; }
+        :root { --primary-color: #2563eb; --bg-color: #f8fafc; --card-bg: #ffffff; --text-color: #1e293b; --border-color: #e2e8f0; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; margin: 0; }
+        .sticky-header { position: sticky; top: 0; z-index: 100; background-color: var(--bg-color); padding: 20px 20px 10px 20px; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 20px 20px 20px; }
+        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .styled-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; }
+        .result-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; margin-top: 20px; }
         .highlight { font-weight: bold; color: var(--primary-color); }
         .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; background: #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: #f1f5f9; }
     </style>
 </head>
 <body>
 
 <div class="sticky-header">
-    <div class="container" style="padding-bottom: 0;">
-        <div class="top-bar">
-            <span>桁区切り表示</span>
-            <label class="switch">
-                <input type="checkbox" id="comma_toggle" checked onchange="handleCommaToggle()">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <header>
-            <h1>カゲマス 討伐イベント ダメージシミュレーター</h1>
-        </header>
-
+    <div class="container">
+        <header><h1>カゲマス 討伐イベント ダメージシミュレーター</h1></header>
         <div class="card">
-            <h2 style="display: flex; justify-content: space-between; align-items: center;">
-                1. ボスHP・ボーナス設定
-                <button onclick="resetSettings()" style="font-size: 0.7rem; padding: 2px 8px; cursor: pointer; border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 4px; color: #1e40af;">初期値に戻す</button>
-            </h2>
+            <h2>1. ボスHP・ボーナス設定</h2>
             <div class="grid">
                 <div class="input-group">
                     <label>ボーナススコア (%)</label>
-                    <input type="text" id="bonus" class="styled-input" data-step="1" oninput="updateAll()">
-                </div>
-                <div class="input-group">
-                    <label>ハード 最大HP</label>
-                    <input type="text" id="hp_h" class="styled-input" data-step="100000" oninput="updateAll()">
-                </div>
-                <div class="input-group">
-                    <label>ベリーハード 最大HP</label>
-                    <input type="text" id="hp_vh" class="styled-input" data-step="1000000" oninput="updateAll()">
+                    <input type="text" id="bonus" class="styled-input" value="0" oninput="updateAll()">
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container" style="padding-top: 20px;">
+<div class="container">
     <div class="card">
-        <h2>2. 難易度移行の損益分岐ライン</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ステップ</th>
-                    <th>重視項目</th>
-                    <th>上位での必要ダメージ率</th>
-                    <th>必要ダメージ量</th>
-                </tr>
-            </thead>
-            <tbody id="step-results"></tbody>
-        </table>
-    </div>
-
-    <div class="card">
-        <h2>3. 現在の火力シミュレーション</h2>
+        <h2>2. 現在の火力シミュレーション</h2>
         <div class="grid">
             <div class="input-group">
                 <label>現在の挑戦難易度</label>
-                <select id="sim_mode" class="styled-input" onchange="handleModeChange()">
+                <select id="sim_mode" class="styled-input" onchange="updateAll()">
                     <option value="H">ハード</option>
                     <option value="VH" selected>ベリーハード</option>
                 </select>
             </div>
             <div class="input-group">
                 <label>与ダメージ量</label>
-                <input type="text" id="current_dmg" class="styled-input" data-step="1000000" oninput="syncRateFromDmg()">
-            </div>
-            <div class="input-group">
-                <label>ダメージ率 (%)</label>
-                <input type="text" id="current_rate" class="styled-input" data-step="1" oninput="syncDmgFromRate()">
+                <input type="text" id="current_dmg" class="styled-input" oninput="updateAll()">
             </div>
         </div>
-        <div id="sim_result" class="result-box"></div>
+        <div id="sim_result" class="result-box">データを読み込んでいます...</div>
     </div>
 </div>
 
 <script>
-    // JSロジックは変更なし（前回の修正を維持）
     const CONFIG = {
-        storageKey: 'raid_calc_settings',
-        init: {
-            bonus: 0,
-            hp_h:  32000000,
-            hp_vh: 160000000,
-            comma: true,
-            mode: 'VH'
-        },
         stats: {
-            N:  { ticket: 60,  gp: 50,   score: 30000 },
             H:  { ticket: 90,  gp: 250,  score: 85000 },
             VH: { ticket: 120, gp: 1100, score: 300000 }
         }
     };
 
-    let calculatedLines = { NH: 0, HVH: 0 };
+    let bossData = null;
 
-    function formatNum(num, isRate = false) {
-        if (isRate) return parseFloat(num).toFixed(1);
-        if (!document.getElementById('comma_toggle').checked) return Math.floor(num).toString();
-        return Math.floor(num).toLocaleString('ja-JP');
-    }
-
-    function parseNum(str) {
-        if (!str) return 0;
-        const cleanStr = str.toString().replace(/,/g, '');
-        const val = parseFloat(cleanStr);
-        return isNaN(val) ? 0 : val;
-    }
-
-    function saveSettings() {
-        const settings = {
-            bonus: parseNum(document.getElementById('bonus').value),
-            hp_h:  parseNum(document.getElementById('hp_h').value),
-            hp_vh: parseNum(document.getElementById('hp_vh').value),
-            comma: document.getElementById('comma_toggle').checked,
-            mode:  document.getElementById('sim_mode').value
-        };
-        localStorage.setItem(CONFIG.storageKey, JSON.stringify(settings));
-    }
-
-    function loadSettings() {
-        const saved = localStorage.getItem(CONFIG.storageKey);
-        if (saved) {
-            try { return JSON.parse(saved); } catch (e) { return CONFIG.init; }
-        }
-        return CONFIG.init;
-    }
-
-    function initInputs() {
-        const settings = loadSettings();
-        document.getElementById('comma_toggle').checked = settings.comma;
-        document.getElementById('bonus').value = formatNum(settings.bonus);
-        document.getElementById('hp_h').value  = formatNum(settings.hp_h);
-        document.getElementById('hp_vh').value = formatNum(settings.hp_vh);
-        document.getElementById('sim_mode').value = settings.mode;
-
-        document.querySelectorAll('.styled-input').forEach(input => {
-            if (input.tagName === 'SELECT') return;
-            input.addEventListener('focus', function() { this.value = parseNum(this.value); });
-            input.addEventListener('blur', function() {
-                const isRate = (this.id === 'current_rate');
-                this.value = formatNum(parseNum(this.value), isRate);
-            });
-        });
-    }
-
-    function resetSettings() {
-            if (!confirm('設定を初期値に戻しますか？')) return;
-
-            // 設定を初期値で上書き
-            localStorage.setItem(CONFIG.storageKey, JSON.stringify(CONFIG.init));
-
-            // 画面の入力値を更新
-            document.getElementById('bonus').value = formatNum(CONFIG.init.bonus);
-            document.getElementById('hp_h').value  = formatNum(CONFIG.init.hp_h);
-            document.getElementById('hp_vh').value = formatNum(CONFIG.init.hp_vh);
-            document.getElementById('sim_mode').value = CONFIG.init.mode;
-
-            // 再計算と表示更新
+    async function init() {
+        try {
+            const response = await fetch('boss_data.json');
+            if (!response.ok) throw new Error();
+            bossData = await response.json();
             updateAll();
+        } catch (e) {
+            document.getElementById('sim_result').innerHTML = "<p style='color:red;'>エラー: boss_data.jsonが見つかりません。</p>";
         }
-
-    // マウスホイールでのスクロール制御（既存の修正をより厳密に）
-    document.addEventListener('wheel', function(e) {
-        const el = e.target;
-        if (el.id === 'sim_mode') { // sim_modeに限定して処理
-            const idx = el.selectedIndex;
-            if (e.deltaY < 0 && idx > 0) el.selectedIndex = idx - 1;
-            else if (e.deltaY > 0 && idx < el.options.length - 1) el.selectedIndex = idx + 1;
-            el.dispatchEvent(new Event('change'));
-            e.preventDefault(); // 画面スクロールを禁止
-        }
-    }, { passive: false });
-
-    // 矢印キーでのスクロール制御
-    document.addEventListener('keydown', function(e) {
-        const el = document.getElementById('sim_mode');
-        if (document.activeElement === el) {
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                e.preventDefault(); // 画面スクロールを禁止
-                // selectのインデックスを手動操作
-                const idx = el.selectedIndex;
-                if (e.key === 'ArrowUp' && idx > 0) el.selectedIndex = idx - 1;
-                else if (e.key === 'ArrowDown' && idx < el.options.length - 1) el.selectedIndex = idx + 1;
-                el.dispatchEvent(new Event('change'));
-            }
-        }
-    });
-
-    function handleCommaToggle() { saveSettings(); refreshAllDisplay(); }
-    function handleModeChange() { saveSettings(); syncDmgFromRate(); }
-
-    function syncRateFromDmg() {
-        const dmg = parseNum(document.getElementById('current_dmg').value);
-        const mode = document.getElementById('sim_mode').value;
-        const hp = parseNum(document.getElementById(mode === 'H' ? 'hp_h' : 'hp_vh').value);
-        const rate = hp > 0 ? (dmg / hp) * 100 : 0;
-        document.getElementById('current_rate').value = rate.toFixed(1);
-        calculate();
     }
 
-    function syncDmgFromRate() {
-        const rate = parseNum(document.getElementById('current_rate').value);
-        const mode = document.getElementById('sim_mode').value;
-        const hp = parseNum(document.getElementById(mode === 'H' ? 'hp_h' : 'hp_vh').value);
-        const dmg = hp * (rate / 100);
-        document.getElementById('current_dmg').value = formatNum(dmg);
-        calculate();
-    }
-
-    function updateAll() {
-        saveSettings();
-        calculateLines();
-        syncDmgFromRate();
-        calculate();
-    }
-
-    function refreshAllDisplay() {
-        document.querySelectorAll('input[type="text"]').forEach(input => {
-            const isRate = (input.id === 'current_rate');
-            input.value = formatNum(parseNum(input.value), isRate);
-        });
-        calculateLines();
-        calculate();
-    }
-
-    function calculateLines() {
-        const bonus = (parseNum(document.getElementById('bonus').value) / 100) + 1;
-        const hpH = parseNum(document.getElementById('hp_h').value);
-        const hpVH = parseNum(document.getElementById('hp_vh').value);
-        const data = {
-            N:  { ...CONFIG.stats.N },
-            H:  { ...CONFIG.stats.H, hp: hpH },
-            VH: { ...CONFIG.stats.VH, hp: hpVH }
-        };
-        const getLine = (low, high) => {
-            const lowMaxGP_per_ticket = (data[low].gp * 1) / data[low].ticket;
-            const gpRate = data[high].gp > 0 ? ((lowMaxGP_per_ticket * data[high].ticket) / data[high].gp) : 0;
-            const lowMaxScore_per_ticket = (data[low].score * 2) / data[low].ticket;
-            const scoreRate = (data[high].score > 0 && bonus > 0) ? ((lowMaxScore_per_ticket * data[high].ticket) / bonus / data[high].score) : 0;
-            return { gpRate: gpRate * 100, scoreRate: scoreRate * 100, gpDmg: data[high].hp * gpRate, scoreDmg: data[high].hp * scoreRate };
-        };
-        const lineNH = getLine('N', 'H');
-        const lineHVH = getLine('H', 'VH');
-        calculatedLines.NH = lineNH.scoreDmg;
-        calculatedLines.HVH = lineHVH.scoreDmg;
-        document.getElementById('step-results').innerHTML = `
-            <tr><td><span class="badge">N → H</span></td><td>ギルドポイント</td><td class="highlight">${lineNH.gpRate.toFixed(1)}%</td><td>${formatNum(lineNH.gpDmg)}</td></tr>
-            <tr><td><span class="badge">N → H</span></td><td>討伐スコア</td><td class="highlight">${lineNH.scoreRate.toFixed(1)}%</td><td>${formatNum(lineNH.scoreDmg)}</td></tr>
-            <tr><td><span class="badge">H → VH</span></td><td>ギルドポイント</td><td class="highlight">${lineHVH.gpRate.toFixed(1)}%</td><td>${formatNum(lineHVH.gpDmg)}</td></tr>
-            <tr><td><span class="badge">H → VH</span></td><td>討伐スコア</td><td class="highlight">${lineHVH.scoreRate.toFixed(1)}%</td><td>${formatNum(lineHVH.scoreDmg)}</td></tr>
-        `;
-    }
+    function parseNum(str) { return parseFloat(str.replace(/,/g, '')) || 0; }
 
     function calculate() {
+        if (!bossData) return;
         const bonus = (parseNum(document.getElementById('bonus').value) / 100) + 1;
         const curDmg = parseNum(document.getElementById('current_dmg').value);
         const simMode = document.getElementById('sim_mode').value;
-        const hpH = parseNum(document.getElementById('hp_h').value);
-        const hpVH = parseNum(document.getElementById('hp_vh').value);
-
-        // 各難易度の基本値と上限値の定義
-        const specs = {
-            H:  { base: 85000, max: 170000, hp: hpH, ticket: CONFIG.stats.H.ticket, gp: CONFIG.stats.H.gp },
-            VH: { base: 300000, max: 600000, hp: hpVH, ticket: CONFIG.stats.VH.ticket, gp: CONFIG.stats.VH.gp }
-        };
-        const target = specs[simMode];
-
-        // ダメージ割合
-        const dmgRate = target.hp > 0 ? (curDmg / target.hp) : 0;
-
-        // スコア計算：(基本スコア * ダメージ割合 * ボーナス) を行い、最後に上限(max)を適用
-        const rawScore = target.base * dmgRate * bonus;
-        const resScore = Math.min(rawScore, target.max);
-
-        // GPはダメージ割合分で上限は1.0倍(100%)
-        const resGP = target.gp * Math.min(dmgRate, 1.0);
-        const scorePerTicket = resScore / target.ticket;
-
-        // ...以下、表示更新のロジック（sim_resultのinnerHTML更新部分）
-        let compareText = "";
-        if(simMode === "VH") {
-            const hMaxEff = (CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket;
-            const diff = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
-            compareText = `<p>ハード最大効率比: <strong>${diff}%</strong></p>`;
-        }
+        
+        const targetHp = bossData[simMode].hp;
+        const stats = CONFIG.stats[simMode];
+        
+        const dmgRate = targetHp > 0 ? (curDmg / targetHp) : 0;
+        const rawScore = stats.score * dmgRate * bonus;
+        const resScore = Math.min(rawScore, stats.score * 2);
+        
         document.getElementById('sim_result').innerHTML = `
             <p><strong>判定結果: ${simMode === 'H' ? 'ハード' : 'ベリーハード'}</strong></p>
             <ul>
-                <li>ダメージ率: <strong>${(dmgRate * 100).toFixed(1)}%</strong></li>
-                <li>獲得スコア(込): <strong>${formatNum(resScore)}</strong></li>
-                <li>獲得GP: <strong>${resGP.toFixed(1)} pt</strong></li>
-                <li>効率(1枚あたり): <strong>${formatNum(scorePerTicket)}</strong></li>
+                <li>ダメージ率: ${(dmgRate * 100).toFixed(1)}%</li>
+                <li>獲得スコア: ${Math.floor(resScore).toLocaleString()}</li>
             </ul>
-            ${compareText}
         `;
     }
 
-    initInputs();
-    calculateLines();
-    const initialSettings = loadSettings();
-    const defaultRate = (initialSettings.mode === "H") 
-        ? (calculatedLines.NH / parseNum(document.getElementById('hp_h').value) * 100)
-        : (calculatedLines.HVH / parseNum(document.getElementById('hp_vh').value) * 100);
-    document.getElementById('current_rate').value = defaultRate.toFixed(1);
-    syncDmgFromRate();
+    function updateAll() { calculate(); }
+    init();
 </script>
-
 </body>
 </html>
