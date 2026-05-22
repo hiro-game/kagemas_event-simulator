@@ -232,6 +232,7 @@
             <div class="input-group">
                 <label>現在の挑戦難易度</label>
                 <select id="sim_mode" class="styled-input" onchange="handleModeChange()">
+                    <option value="N">ノーマル</option>
                     <option value="H">ハード</option>
                     <option value="VH" selected>ベリーハード</option>
                 </select>
@@ -438,15 +439,12 @@ function resetSettings() {
 
         if (simMode === "H") {
             const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
-            const diffVH = vhMaxEff > 0 ? (scorePerTicket / vhMaxEff * 100).toFixed(1) : "0";
-            
             compareText = `
                 <p>ノーマル最大効率比: <strong>${diffN}%</strong></p>
-                <p>ベリーハード最大効率比: <strong>${diffVH}%</strong></p>
             `;
         } else if (simMode === "VH") {
-            const diffH = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
             const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
+            const diffH = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
             compareText = `
                 <p>ノーマル最大効率比: <strong>${diffN}%</strong></p>
                 <p>ハード最大効率比: <strong>${diffH}%</strong></p>
