@@ -454,6 +454,7 @@ function calculate() {
         } else if (simMode === "VH") {
             const hMaxEff = Math.floor((CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket);
             const diffH = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
+            compareText = `<p>ノーマル最大効率比: <strong>${diffN}%</strong></p>`;
             compareText = `<p>ハード最大効率比: <strong>${diffH}%</strong></p>`;
         }
 
