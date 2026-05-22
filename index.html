@@ -5,24 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ダメージシミュレーター</title>
     <style>
-        :root { --primary-color: #2563eb; --bg-color: #f8fafc; --card-bg: #ffffff; --text-color: #1e293b; --border-color: #e2e8f0; }
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg-color); color: var(--text-color); line-height: 1.6; margin: 0; padding: 0; }
-        .sticky-header { position: sticky; top: 0; z-index: 100; background-color: var(--bg-color); padding: 20px 20px 10px 20px; box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1); }
-        .container { max-width: 800px; margin: 0 auto; padding: 0 20px 20px 20px; }
-        .top-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 10px; gap: 10px; font-size: 0.875rem; font-weight: bold; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 22px; }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--primary-color); }
-        input:checked + .slider:before { transform: translateX(22px); }
-        header h1 { text-align: center; margin: 0 0 15px 0; font-size: 1.5rem; }
-        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 20px; }
-        h2 { margin-top: 0; font-size: 1.1rem; border-left: 4px solid var(--primary-color); padding-left: 10px; color: #1e40af; margin-bottom: 15px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-        .styled-input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 0.95rem; background-color: #fff; cursor: pointer; }
-        .result-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 20px; border-radius: 8px; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0; /* paddingをcontainer側に移動 */
+        }
+
+        /* 固定エリアのラッパー */
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: var(--bg-color);
+            padding: 20px 20px 10px 20px;
+            box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px 20px 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+            font-size: 0.875rem;
+            font-weight: bold;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        header h1 {
+            text-align: center;
+            margin: 0 0 15px 0;
+            font-size: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+        }
+
+        /* 固定されるカードの余白調整 */
+        .sticky-header .card {
+            margin-bottom: 0;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 10px;
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .input-group {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .styled-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background-color: #fff;
+            cursor: pointer;
+        }
+
+        .styled-input:hover { border-color: #cbd5e1; background-color: #fdfdfd; }
+        .styled-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        .result-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.85rem;
+        }
+
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background: #f1f5f9; color: #475569; }
         .highlight { font-weight: bold; color: var(--primary-color); }
@@ -35,15 +177,34 @@
     <div class="container" style="padding-bottom: 0;">
         <div class="top-bar">
             <span>桁区切り表示</span>
-            <label class="switch"><input type="checkbox" id="comma_toggle" checked onchange="updateAll()"><span class="slider"></span></label>
+            <label class="switch">
+                <input type="checkbox" id="comma_toggle" checked onchange="handleCommaToggle()">
+                <span class="slider"></span>
+            </label>
         </div>
-        <header><h1>カゲマス 討伐イベント ダメージシミュレーター</h1></header>
+
+        <header>
+            <h1>カゲマス 討伐イベント ダメージシミュレーター</h1>
+        </header>
+
         <div class="card">
-            <h2 style="display: flex; justify-content: space-between;">1. ボスHP・ボーナス設定
+            <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                1. ボスHP・ボーナス設定
                 <button onclick="resetSettings()" style="font-size: 0.7rem; padding: 2px 8px; cursor: pointer; border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 4px; color: #1e40af;">初期値に戻す</button>
             </h2>
             <div class="grid">
-                <div class="input-group"><label>ボーナススコア (%)</label><input type="text" id="bonus" class="styled-input" oninput="updateAll()"></div>
+                <div class="input-group">
+                    <label>ボーナススコア (%)</label>
+                    <input type="text" id="bonus" class="styled-input" data-step="1" oninput="updateAll()">
+                </div>
+                <div class="input-group">
+                    <label>ハード 最大HP</label>
+                    <input type="text" id="hp_h" class="styled-input" data-step="100000" oninput="updateAll()">
+                </div>
+                <div class="input-group">
+                    <label>ベリーハード 最大HP</label>
+                    <input type="text" id="hp_vh" class="styled-input" data-step="1000000" oninput="updateAll()">
+                </div>
             </div>
         </div>
     </div>
@@ -52,83 +213,236 @@
 <div class="container" style="padding-top: 20px;">
     <div class="card">
         <h2>2. 難易度移行の損益分岐ライン</h2>
-        <table><thead><tr><th>ステップ</th><th>重視項目</th><th>必要率</th><th>必要ダメ</th></tr></thead><tbody id="step-results"></tbody></table>
+        <table>
+            <thead>
+                <tr>
+                    <th>ステップ</th>
+                    <th>重視項目</th>
+                    <th>上位での必要ダメージ率</th>
+                    <th>必要ダメージ量</th>
+                </tr>
+            </thead>
+            <tbody id="step-results"></tbody>
+        </table>
     </div>
+
     <div class="card">
         <h2>3. 現在の火力シミュレーション</h2>
         <div class="grid">
-            <select id="sim_mode" class="styled-input" onchange="updateAll()">
-                <option value="H">ハード</option>
-                <option value="VH" selected>ベリーハード</option>
-            </select>
-            <input type="text" id="current_dmg" class="styled-input" placeholder="与ダメージ" oninput="syncRateFromDmg()">
-            <input type="text" id="current_rate" class="styled-input" placeholder="割合(%)" oninput="syncDmgFromRate()">
+            <div class="input-group">
+                <label>現在の挑戦難易度</label>
+                <select id="sim_mode" class="styled-input" onchange="handleModeChange()">
+                    <option value="H">ハード</option>
+                    <option value="VH" selected>ベリーハード</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>与ダメージ量</label>
+                <input type="text" id="current_dmg" class="styled-input" data-step="1000000" oninput="syncRateFromDmg()">
+            </div>
+            <div class="input-group">
+                <label>ダメージ率 (%)</label>
+                <input type="text" id="current_rate" class="styled-input" data-step="1" oninput="syncDmgFromRate()">
+            </div>
         </div>
-        <div id="sim_result" class="result-box">データを読み込んでいます...</div>
+        <div id="sim_result" class="result-box"></div>
     </div>
 </div>
 
 <script>
-    const CONFIG = { storageKey: 'raid_calc_settings', init: { bonus: 0, mode: 'VH' }, stats: { H: { ticket: 90, gp: 250, score: 85000 }, VH: { ticket: 120, gp: 1100, score: 300000 } } };
+const CONFIG = {
+        storageKey: 'raid_calc_settings',
+        init: { bonus: 0, comma: true, mode: 'VH' },
+        stats: {
+            N:  { ticket: 60,  gp: 50,   score: 30000 },
+            H:  { ticket: 90,  gp: 250,  score: 85000 },
+            VH: { ticket: 120, gp: 1100, score: 300000 }
+        }
+    };
+
     let bossData = null;
+    let calculatedLines = { NH: 0, HVH: 0 };
 
     async function init() {
         try {
             const response = await fetch('boss_data.json');
             bossData = await response.json();
-            const settings = JSON.parse(localStorage.getItem(CONFIG.storageKey) || JSON.stringify(CONFIG.init));
-            document.getElementById('bonus').value = settings.bonus;
-            document.getElementById('sim_mode').value = settings.mode;
+            
+            // 読み込み完了後に画面初期化
+            document.getElementById('hp_h').value = formatNum(bossData.H.hp);
+            document.getElementById('hp_vh').value = formatNum(bossData.VH.hp);
+            initInputs();
             updateAll();
-        } catch (e) { document.getElementById('sim_result').innerHTML = "エラー: boss_data.json読み込み失敗。サーバー経由で開いてください。"; }
+        } catch (e) {
+            document.getElementById('sim_result').innerHTML = "エラー: boss_data.jsonが読み込めません。サーバー経由で開いてください。";
+        }
     }
 
     function formatNum(num, isRate = false) {
         if (isRate) return parseFloat(num).toFixed(1);
-        return document.getElementById('comma_toggle').checked ? Math.floor(num).toLocaleString('ja-JP') : Math.floor(num).toString();
+        if (!document.getElementById('comma_toggle').checked) return Math.floor(num).toString();
+        return Math.floor(num).toLocaleString('ja-JP');
     }
-    function parseNum(str) { return parseFloat(str.toString().replace(/,/g, '')) || 0; }
+
+    function parseNum(str) {
+        if (!str) return 0;
+        const cleanStr = str.toString().replace(/,/g, '');
+        const val = parseFloat(cleanStr);
+        return isNaN(val) ? 0 : val;
+    }
+
+    function saveSettings() {
+        const settings = {
+            bonus: parseNum(document.getElementById('bonus').value),
+            comma: document.getElementById('comma_toggle').checked,
+            mode:  document.getElementById('sim_mode').value
+        };
+        localStorage.setItem(CONFIG.storageKey, JSON.stringify(settings));
+    }
+
+    function loadSettings() {
+        const saved = localStorage.getItem(CONFIG.storageKey);
+        return saved ? JSON.parse(saved) : CONFIG.init;
+    }
+
+    function initInputs() {
+        const settings = loadSettings();
+        document.getElementById('comma_toggle').checked = settings.comma;
+        document.getElementById('bonus').value = formatNum(settings.bonus);
+        document.getElementById('sim_mode').value = settings.mode;
+
+        document.querySelectorAll('.styled-input').forEach(input => {
+            if (input.tagName === 'SELECT') return;
+            input.addEventListener('focus', function() { this.value = parseNum(this.value); });
+            input.addEventListener('blur', function() {
+                const isRate = (this.id === 'current_rate');
+                this.value = formatNum(parseNum(this.value), isRate);
+            });
+        });
+    }
+
+    function resetSettings() {
+        if (!confirm('設定を初期値に戻しますか？')) return;
+        localStorage.removeItem(CONFIG.storageKey);
+        location.reload();
+    }
+
+    // マウスホイール・矢印キー制御はそのまま維持
+    document.addEventListener('wheel', function(e) {
+        const el = e.target;
+        if (el.id === 'sim_mode') {
+            const idx = el.selectedIndex;
+            if (e.deltaY < 0 && idx > 0) el.selectedIndex = idx - 1;
+            else if (e.deltaY > 0 && idx < el.options.length - 1) el.selectedIndex = idx + 1;
+            el.dispatchEvent(new Event('change'));
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    document.addEventListener('keydown', function(e) {
+        const el = document.getElementById('sim_mode');
+        if (document.activeElement === el && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            e.preventDefault();
+            const idx = el.selectedIndex;
+            if (e.key === 'ArrowUp' && idx > 0) el.selectedIndex = idx - 1;
+            else if (e.key === 'ArrowDown' && idx < el.options.length - 1) el.selectedIndex = idx + 1;
+            el.dispatchEvent(new Event('change'));
+        }
+    });
+
+    function handleCommaToggle() { saveSettings(); refreshAllDisplay(); }
+    function handleModeChange() { saveSettings(); syncDmgFromRate(); }
+
+    function syncRateFromDmg() {
+        const dmg = parseNum(document.getElementById('current_dmg').value);
+        const mode = document.getElementById('sim_mode').value;
+        const hp = bossData[mode].hp;
+        const rate = hp > 0 ? (dmg / hp) * 100 : 0;
+        document.getElementById('current_rate').value = rate.toFixed(1);
+        calculate();
+    }
+
+    function syncDmgFromRate() {
+        const rate = parseNum(document.getElementById('current_rate').value);
+        const mode = document.getElementById('sim_mode').value;
+        const hp = bossData[mode].hp;
+        document.getElementById('current_dmg').value = formatNum(hp * (rate / 100));
+        calculate();
+    }
 
     function updateAll() {
-        if (!bossData) return;
-        localStorage.setItem(CONFIG.storageKey, JSON.stringify({ bonus: parseNum(document.getElementById('bonus').value), mode: document.getElementById('sim_mode').value }));
+        saveSettings();
+        calculateLines();
+        syncDmgFromRate();
+    }
+
+    function refreshAllDisplay() {
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            const isRate = (input.id === 'current_rate');
+            input.value = formatNum(parseNum(input.value), isRate);
+        });
         calculateLines();
         calculate();
     }
 
-    function calculate() {
+    function calculateLines() {
+        if (!bossData) return;
         const bonus = (parseNum(document.getElementById('bonus').value) / 100) + 1;
-        const mode = document.getElementById('sim_mode').value;
-        const curDmg = parseNum(document.getElementById('current_dmg').value);
-        const hp = bossData[mode].hp;
-        const stats = CONFIG.stats[mode];
-        const rate = hp > 0 ? (curDmg / hp) : 0;
+        const data = { N: { ...CONFIG.stats.N }, H: { ...CONFIG.stats.H, hp: bossData.H.hp }, VH: { ...CONFIG.stats.VH, hp: bossData.VH.hp } };
+        
+        const getLine = (low, high) => {
+            const lowMaxGP_per_ticket = data[low].gp / data[low].ticket;
+            const gpRate = data[high].gp > 0 ? ((lowMaxGP_per_ticket * data[high].ticket) / data[high].gp) : 0;
+            const lowMaxScore_per_ticket = (data[low].score * 2) / data[low].ticket;
+            const scoreRate = (data[high].score > 0 && bonus > 0) ? ((lowMaxScore_per_ticket * data[high].ticket) / bonus / data[high].score) : 0;
+            return { gpRate: gpRate * 100, scoreRate: scoreRate * 100, gpDmg: data[high].hp * gpRate, scoreDmg: data[high].hp * scoreRate };
+        };
+        const lineNH = getLine('N', 'H');
+        const lineHVH = getLine('H', 'VH');
+        calculatedLines.NH = lineNH.scoreDmg;
+        calculatedLines.HVH = lineHVH.scoreDmg;
+        document.getElementById('step-results').innerHTML = `
+            <tr><td><span class="badge">N → H</span></td><td>ギルドポイント</td><td class="highlight">${lineNH.gpRate.toFixed(1)}%</td><td>${formatNum(lineNH.gpDmg)}</td></tr>
+            <tr><td><span class="badge">N → H</span></td><td>討伐スコア</td><td class="highlight">${lineNH.scoreRate.toFixed(1)}%</td><td>${formatNum(lineNH.scoreDmg)}</td></tr>
+            <tr><td><span class="badge">H → VH</span></td><td>ギルドポイント</td><td class="highlight">${lineHVH.gpRate.toFixed(1)}%</td><td>${formatNum(lineHVH.gpDmg)}</td></tr>
+            <tr><td><span class="badge">H → VH</span></td><td>討伐スコア</td><td class="highlight">${lineHVH.scoreRate.toFixed(1)}%</td><td>${formatNum(lineHVH.scoreDmg)}</td></tr>
+        `;
+    }
 
-        const resScore = Math.min(stats.score * rate * bonus, stats.score * 2);
-        const resGP = stats.gp * Math.min(rate, 1.0);
-        const scorePerTicket = resScore / stats.ticket;
+    function calculate() {
+        if (!bossData) return;
+        const bonus = (parseNum(document.getElementById('bonus').value) / 100) + 1;
+        const curDmg = parseNum(document.getElementById('current_dmg').value);
+        const simMode = document.getElementById('sim_mode').value;
+        const target = { ...CONFIG.stats[simMode], hp: bossData[simMode].hp };
+        
+        const dmgRate = target.hp > 0 ? (curDmg / target.hp) : 0;
+        const rawScore = target.score * dmgRate * bonus;
+        const resScore = Math.min(rawScore, target.score * 2);
+        const resGP = target.gp * Math.min(dmgRate, 1.0);
+        const scorePerTicket = resScore / target.ticket;
 
         let compareText = "";
-        if(mode === "VH") {
+        if(simMode === "VH") {
             const hMaxEff = (CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket;
-            compareText = `<p>ハード最大効率比: <strong>${hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : 0}%</strong></p>`;
+            const diff = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
+            compareText = `<p>ハード最大効率比: <strong>${diff}%</strong></p>`;
         }
-        document.getElementById('sim_result').innerHTML = `<p><strong>判定結果: ${mode === 'H' ? 'ハード' : 'ベリーハード'}</strong></p><ul><li>ダメージ率: <strong>${(rate * 100).toFixed(1)}%</strong></li><li>獲得スコア(込): <strong>${formatNum(resScore)}</strong></li><li>獲得GP: <strong>${resGP.toFixed(1)} pt</strong></li><li>効率(1枚あたり): <strong>${formatNum(scorePerTicket)}</strong></li></ul>${compareText}`;
+        document.getElementById('sim_result').innerHTML = `
+            <p><strong>判定結果: ${simMode === 'N' ? 'ノーマル' : simMode === 'H' ? 'ハード' : 'ベリーハード'}</strong></p>
+            <ul>
+                <li>ダメージ率: <strong>${(dmgRate * 100).toFixed(1)}%</strong></li>
+                <li>獲得スコア(込): <strong>${formatNum(resScore)}</strong></li>
+                <li>獲得GP: <strong>${resGP.toFixed(1)} pt</strong></li>
+                <li>効率(1枚あたり): <strong>${formatNum(scorePerTicket)}</strong></li>
+            </ul>
+            ${compareText}
+        `;
     }
 
-    function calculateLines() {
-        const bonus = (parseNum(document.getElementById('bonus').value) / 100) + 1;
-        const hMaxEff = (CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket;
-        const rateVH = (hMaxEff * CONFIG.stats.VH.ticket) / (CONFIG.stats.VH.score * bonus);
-        const line = { scoreRate: rateVH * 100, scoreDmg: bossData.VH.hp * rateVH };
-        document.getElementById('step-results').innerHTML = `<tr><td><span class="badge">H→VH</span></td><td>討伐スコア</td><td class="highlight">${line.scoreRate.toFixed(1)}%</td><td>${formatNum(line.scoreDmg)}</td></tr>`;
-    }
-
-    function syncRateFromDmg() { const rate = parseNum(document.getElementById('current_dmg').value) / bossData[document.getElementById('sim_mode').value].hp * 100; document.getElementById('current_rate').value = rate.toFixed(1); updateAll(); }
-    function syncDmgFromRate() { const dmg = bossData[document.getElementById('sim_mode').value].hp * (parseNum(document.getElementById('current_rate').value) / 100); document.getElementById('current_dmg').value = formatNum(dmg); updateAll(); }
-    function resetSettings() { localStorage.removeItem(CONFIG.storageKey); location.reload(); }
-    document.addEventListener('wheel', (e) => { if (e.target.id === 'sim_mode') { const el = e.target; el.selectedIndex += (e.deltaY > 0 ? 1 : -1); el.dispatchEvent(new Event('change')); e.preventDefault(); } }, {passive: false});
+    // 起動
     init();
 </script>
+
 </body>
 </html>
