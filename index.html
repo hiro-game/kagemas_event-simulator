@@ -445,8 +445,10 @@ function calculate() {
         const scorePerTicket = Math.floor(resScore / target.ticket);
 
         // 5. 比較テキスト（Nとの比較のみ）
+// 5. 比較テキスト（Nとの比較のみ）
         let compareText = "";
         const nMaxEff = Math.floor((CONFIG.stats.N.score * 2) / CONFIG.stats.N.ticket);
+        const hMaxEff = Math.floor((CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket);
         
         if (simMode === "H") {
             const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
@@ -455,11 +457,10 @@ function calculate() {
                 <p style="font-size:0.85rem; color:#666;">※ノーマルで最大スコアを取得した場合と比較した効率比です。<br>100%で討伐証1枚当たりのスコア量がノーマルと同等であることを示します。</p>
             `;
         } else if (simMode === "VH") {
-            const hMaxEff = Math.floor((CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket);
+            const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
             const diffH = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
-            compareText = `<p>ノーマル最大効率比: <strong>${diffN}%</strong></p>`;
             compareText = `
-                <p>ノーマル最大効率比: <strong>${diffN}%</strong>
+                <p>ノーマル最大効率比: <strong>${diffN}%</strong><br>
                 ハード最大効率比: <strong>${diffH}%</strong></p>
                 <p style="font-size:0.85rem; color:#666;">※ハードで最大スコアを取得した場合と比較した効率比です。<br>
                 100%で討伐証1枚当たりのスコア量がハードと同等であることを示します。</p>
