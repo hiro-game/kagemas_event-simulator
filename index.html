@@ -248,32 +248,32 @@
     <div class="card">
         <h2>3. 現在の火力シミュレーション</h2>
 <div class="grid">
-            <div class="input-group">
-                <label>挑戦難易度</label>
-                <select id="sim_mode" class="styled-input" onchange="handleModeChange()" onwheel="handleWheel(event)">
-                    <option value="N">ノーマル</option>
-                    <option value="H">ハード</option>
-                    <option value="VH" selected>ベリーハード</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>ブースト倍率</label>
-                <select id="boost_rate" class="styled-input" onchange="calculate()" onwheel="handleWheel(event)">
-                    <option value="1">×1</option>
-                    <option value="2">×2</option>
-                    <option value="3">×3</option>
-                    <option value="4">×4</option>
-                    <option value="5" selected>×5</option>
-                </select>
-            </div>
+       <div class="input-group">
+    <label>挑戦難易度</label>
+    <select id="sim_mode" class="styled-input" onchange="handleModeChange()">
+        <option value="N">ノーマル</option>
+        <option value="H">ハード</option>
+        <option value="VH" selected>ベリーハード</option>
+    </select>
+</div>
+<div class="input-group">
+    <label>ブースト倍率</label>
+    <select id="boost_rate" class="styled-input" onchange="calculate()">
+        <option value="1">×1</option>
+        <option value="2">×2</option>
+        <option value="3">×3</option>
+        <option value="4">×4</option>
+        <option value="5" selected>×5</option>
+    </select>
+</div>
             <div class="input-group">
                 <label>与ダメージ量</label>
-                <input type="text" id="current_dmg" class="styled-input" oninput="syncRateFromDmg()">
-            </div>
+                <input type="text" id="current_dmg" class="styled-input" 
+                    onfocus="this.value = parseNum(this.value);"
+                    onblur="this.value = formatNum(parseNum(this.value));">            </div>
             <div class="input-group">
                 <label>ダメージ率 (%)</label>
-                <input type="text" id="current_rate" class="styled-input" data-step="1" oninput="syncDmgFromRate()">
-            </div>
+                <input type="text" id="current_rate" class="styled-input" data-step="1" onblur="syncDmgFromRate()">            </div>
         </div>
         <div id="sim_result" class="result-box"></div>
     </div>
@@ -293,20 +293,61 @@
     let bossData = null;
     let calculatedLines = { NH: 0, HVH: 0 };
 
-    async function init() {
-        try {
-            const response = await fetch('boss_data.json');
-            bossData = await response.json();
-            
-            document.getElementById('hp_n').value = formatNum(bossData.N.hp);
-            document.getElementById('hp_h').value = formatNum(bossData.H.hp);
-            document.getElementById('hp_vh').value = formatNum(bossData.VH.hp);
-            initInputs();
+async function init() {
+    try {
+        const response = await fetch('boss_data.json');
+        if (!response.ok) throw new Error('Network response was not ok');
+        bossData = await response.json();
+        
+        // 1. HPの初期値セット（JSON取得後）
+        document.getElementById('hp_n').value = formatNum(bossData.N.hp);
+        document.getElementById('hp_h').value = formatNum(bossData.H.hp);
+        document.getElementById('hp_vh').value = formatNum(bossData.VH.hp);
+        
+        // 2. 自動保存用のリスナー登録
+        const inputIds = ['comma_toggle', 'bonus', 'hp_n', 'hp_h', 'hp_vh', 'sim_mode', 'boost_rate', 'current_dmg'];
+        inputIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('change', saveSettings);
+            }
+        });
+
+        // 3. 全入力欄の フォーカス/ブラー イベント（カンマ処理の統合）
+        const textInputs = ['bonus', 'hp_n', 'hp_h', 'hp_vh', 'current_dmg', 'current_rate'];
+        textInputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('blur', () => {
+                const isRate = (id === 'current_rate');
+                el.value = formatNum(parseNum(el.value), isRate);
+                updateAll();
+            });
+            el.addEventListener('focus', () => {
+                el.value = parseNum(el.value);
+            });
+        });
+
+        // 4. ローカルストレージ読み込み
+        const saved = localStorage.getItem(CONFIG.storageKey);
+        if (saved) {
+            const s = JSON.parse(saved);
+            document.getElementById('comma_toggle').checked = s.comma;
+            document.getElementById('bonus').value = s.bonus;
+            document.getElementById('hp_n').value = formatNum(s.hp_n);
+            document.getElementById('hp_h').value = formatNum(s.hp_h);
+            document.getElementById('hp_vh').value = formatNum(s.hp_vh);
+            document.getElementById('sim_mode').value = s.mode;
+            document.getElementById('boost_rate').value = s.boost;
+            document.getElementById('current_dmg').value = formatNum(s.dmg);
+            document.getElementById('current_rate').value = s.rate;
+
             updateAll();
-        } catch (e) {
-            document.getElementById('sim_result').innerHTML = "エラー: boss_data.jsonが読み込めません。サーバー経由で開いてください。";
         }
+    } catch (e) {
+        console.error("初期化エラー:", e);
     }
+}
 
     // --- イベント制御の一括管理 ---
     function handleSelectOperation(el, delta, key) {
@@ -340,33 +381,53 @@
         return Math.floor(num).toLocaleString('ja-JP');
     }
 
-    function parseNum(str) {
-        if (!str) return 0;
-        const cleanStr = str.toString().replace(/,/g, '');
-        const val = parseFloat(cleanStr);
-        return isNaN(val) ? 0 : val;
-    }
+function parseNum(str) {
+    if (!str) return 0;
+    // 1. 全角を半角に変換
+    let s = str.toString().replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+    // 2. 数字と小数点以外（カンマ等）を全て削除
+    s = s.replace(/[^0-9.]/g, '');
+    
+    const val = parseFloat(s);
+    return isNaN(val) ? 0 : val;
+}
 
-    function saveSettings() {
-        const settings = {
-            bonus: parseNum(document.getElementById('bonus').value),
-            comma: document.getElementById('comma_toggle').checked,
-            mode:  document.getElementById('sim_mode').value
-        };
-        localStorage.setItem(CONFIG.storageKey, JSON.stringify(settings));
-    }
+function saveSettings() {
+    const settings = {
+        comma: document.getElementById('comma_toggle').checked,
+        bonus: parseNum(document.getElementById('bonus').value).toString(),
+        hp_n:  parseNum(document.getElementById('hp_n').value).toString(),
+        hp_h:  parseNum(document.getElementById('hp_h').value).toString(),
+        hp_vh: parseNum(document.getElementById('hp_vh').value).toString(),
+        mode:  document.getElementById('sim_mode').value,
+        boost: document.getElementById('boost_rate').value,
+        dmg:   parseNum(document.getElementById('current_dmg').value).toString()
+    };
+    localStorage.setItem(CONFIG.storageKey, JSON.stringify(settings));
+}
 
     function loadSettings() {
         const saved = localStorage.getItem(CONFIG.storageKey);
-        return saved ? JSON.parse(saved) : CONFIG.init;
+        if (!saved) return null;
+        return JSON.parse(saved);
     }
 
     function initInputs() {
-        const settings = loadSettings();
-        document.getElementById('comma_toggle').checked = settings.comma;
-        document.getElementById('bonus').value = formatNum(settings.bonus);
-        document.getElementById('sim_mode').value = settings.mode;
+        const saved = localStorage.getItem(CONFIG.storageKey);
+        if (!saved) return;
+        const s = JSON.parse(saved);
 
+        // 各項目に値を反映する際、formatNum を通す
+        document.getElementById('comma_toggle').checked = s.comma;
+        document.getElementById('bonus').value = formatNum(s.bonus);
+        document.getElementById('hp_n').value = formatNum(s.hp_n);
+        document.getElementById('hp_h').value = formatNum(s.hp_h);
+        document.getElementById('hp_vh').value = formatNum(s.hp_vh);
+        document.getElementById('sim_mode').value = s.mode;
+        document.getElementById('boost_rate').value = s.boost;
+        document.getElementById('current_dmg').value = formatNum(s.dmg);
+
+        // 入力時のフォーカス/ブラー処理は既存のまま
         document.querySelectorAll('.styled-input').forEach(input => {
             if (input.tagName === 'SELECT') return;
             input.addEventListener('focus', function() { this.value = parseNum(this.value); });
@@ -380,22 +441,15 @@
 function resetSettings() {
         if (!confirm('ボーナスとボスHPを初期値に戻しますか？')) return;
 
-        // 1. ボーナス設定を初期値(0)で保存
-        const settings = loadSettings();
-        settings.bonus = CONFIG.init.bonus;
-        localStorage.setItem(CONFIG.storageKey, JSON.stringify(settings));
-
-        // 2. 「ボーナス」入力項目をリセット
-        document.getElementById('bonus').value = formatNum(CONFIG.init.bonus);
-
-        // 3. ボスHPの入力項目をサーバーからのデータ（初期値）でリセット
+        document.getElementById('bonus').value = 0;
         if (bossData) {
             document.getElementById('hp_n').value = formatNum(bossData.N.hp);
             document.getElementById('hp_h').value = formatNum(bossData.H.hp);
             document.getElementById('hp_vh').value = formatNum(bossData.VH.hp);
         }
 
-        // 4. 難易度設定は保持したまま全体を再計算
+        // 状態をクリーンな状態で保存
+        saveSettings();
         updateAll();
     }
 
@@ -411,15 +465,26 @@ function resetSettings() {
         calculate();
     }
 
-    function syncDmgFromRate() {
-        const rate = parseNum(document.getElementById('current_rate').value);
-        const mode = document.getElementById('sim_mode').value;
-        const hp = bossData[mode].hp;
-        document.getElementById('current_dmg').value = formatNum(hp * (rate / 100));
-        calculate();
-    }
+function syncDmgFromRate() {
+    const el = document.getElementById('current_rate');
+    const rate = parseNum(el.value);
+    const mode = document.getElementById('sim_mode').value;
+    const hp = bossData[mode].hp;
+    
+    // 計算
+    const dmg = Math.floor(hp * (rate / 100));
+    
+    // フォームに反映（カンマ区切りなどを適用）
+    document.getElementById('current_dmg').value = formatNum(dmg);
+    
+    // 表示の整形（入力された数値を正しく表示）
+    el.value = rate.toFixed(1);
+    
+    // 最終計算
+    calculate();
+}
 
-    function updateAll() { saveSettings(); calculateLines(); syncDmgFromRate(); }
+    function updateAll() { saveSettings(); calculateLines(); calculate(); }
 
     function refreshAllDisplay() {
         document.querySelectorAll('input[type="text"]').forEach(input => {
@@ -430,18 +495,34 @@ function resetSettings() {
         calculate();
     }
 
-    function calculateLines() {
-        if (!bossData) return;
-        const bonus = (parseNum(document.getElementById('bonus').value) / 100) + 1;
-        const data = { N: { ...CONFIG.stats.N }, H: { ...CONFIG.stats.H, hp: bossData.H.hp }, VH: { ...CONFIG.stats.VH, hp: bossData.VH.hp } };
-        
-        const getLine = (low, high) => {
-            const lowMaxGP_per_ticket = data[low].gp / data[low].ticket;
-            const gpRate = data[high].gp > 0 ? ((lowMaxGP_per_ticket * data[high].ticket) / data[high].gp) : 0;
-            const lowMaxScore_per_ticket = (data[low].score * 2) / data[low].ticket;
-            const scoreRate = (data[high].score > 0 && bonus > 0) ? ((lowMaxScore_per_ticket * data[high].ticket) / bonus / data[high].score) : 0;
-            return { gpRate: gpRate * 100, scoreRate: scoreRate * 100, gpDmg: data[high].hp * gpRate, scoreDmg: data[high].hp * scoreRate };
-        };
+function calculateLines() {
+    if (!bossData) return;
+    
+    // 1. 最新のHPをフォームから取得
+    const currentHP = {
+        N: parseNum(document.getElementById('hp_n').value),
+        H: parseNum(document.getElementById('hp_h').value),
+        VH: parseNum(document.getElementById('hp_vh').value)
+    };
+    
+    const bonus = (parseNum(document.getElementById('bonus').value) / 100) + 1;
+    
+    // 2. dataオブジェクトを最新のHPで作成
+    const data = { 
+        N: { ...CONFIG.stats.N, hp: currentHP.N }, 
+        H: { ...CONFIG.stats.H, hp: currentHP.H }, 
+        VH: { ...CONFIG.stats.VH, hp: currentHP.VH } 
+    };
+    
+    // 3. 以降は既存のロジックで計算
+    const getLine = (low, high) => {
+        // ... (省略：既存のロジックをそのまま使用)
+        const lowMaxGP_per_ticket = data[low].gp / data[low].ticket;
+        const gpRate = data[high].gp > 0 ? ((lowMaxGP_per_ticket * data[high].ticket) / data[high].gp) : 0;
+        const lowMaxScore_per_ticket = (data[low].score * 2) / data[low].ticket;
+        const scoreRate = (data[high].score > 0 && bonus > 0) ? ((lowMaxScore_per_ticket * data[high].ticket) / bonus / data[high].score) : 0;
+        return { gpRate: gpRate * 100, scoreRate: scoreRate * 100, gpDmg: data[high].hp * gpRate, scoreDmg: data[high].hp * scoreRate };
+    };
         const lineNH = getLine('N', 'H');
         const lineHVH = getLine('H', 'VH');
         calculatedLines.NH = lineNH.scoreDmg;
@@ -454,53 +535,66 @@ function resetSettings() {
         `;
     }
 
-    function calculate() {
-        if (!bossData) return;
-        const bonusRate = (parseNum(document.getElementById('bonus').value) / 100) + 1;
-        const curDmg = parseNum(document.getElementById('current_dmg').value);
-        const simMode = document.getElementById('sim_mode').value;
-        const boost = parseInt(document.getElementById('boost_rate').value);
-        const target = { ...CONFIG.stats[simMode], hp: bossData[simMode].hp };
+function calculate() {
+    if (!bossData) return;
 
-        const dmgRate = target.hp > 0 ? (curDmg / target.hp) : 0;
+    // 1. 入力値の取得
+    const bonus = parseNum(document.getElementById('bonus').value);
+    const bonusRate = (bonus / 100) + 1;
+    const curDmg = parseNum(document.getElementById('current_dmg').value);
+    const simMode = document.getElementById('sim_mode').value;
+    const boost = parseInt(document.getElementById('boost_rate').value);
+    const target = { ...CONFIG.stats[simMode], hp: bossData[simMode].hp };
+    const config = {
+        N:  { base: 30000, min: 10000, max: 60000 },
+        H:  { base: 85000, min: 15000, max: 170000 },
+        VH: { base: 300000, min: 20000, max: 600000 }
+    };
 
-        // 1回あたりの計算
-        const baseVal = Math.floor(target.score * dmgRate);
-        const resScorePerTime = Math.min(Math.floor(baseVal * bonusRate), target.score * 2);
-        const resGPPerTime = Math.floor(target.gp * Math.min(dmgRate, 1.0));
+    // 2. 共通変数：ダメージ割合
+    const dmgRate = target.hp > 0 ? (curDmg / target.hp) : 0;
 
-        // 倍率を掛けた合計値
-        const totalScore = resScorePerTime * boost;
-        const totalGP = resGPPerTime * boost;
-        
-        const scorePerTicket = Math.floor(resScorePerTime / target.ticket);
+    // 3. GP計算 (端数切り捨て)
+    const resGPPerTime = Math.floor(target.gp * dmgRate);
+    const totalGP = resGPPerTime * boost;
 
-        // 比較ロジック（そのまま維持）
-        let compareText = "";
-        const nMaxEff = Math.floor((CONFIG.stats.N.score * 2) / CONFIG.stats.N.ticket);
-        const hMaxEff = Math.floor((CONFIG.stats.H.score * 2) / CONFIG.stats.H.ticket);
-        
-        if (simMode === "H") {
-            const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
-            compareText = `<p>ノーマル最大効率比: <strong>${diffN}%</strong></p>`;
-        } else if (simMode === "VH") {
-            const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
-            const diffH = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
-            compareText = `<p>ノーマル最大効率比: <strong>${diffN}%</strong><br>ハード最大効率比: <strong>${diffH}%</strong></p>`;
-        }
+    // 4. スコア計算 (四捨五入で段階的に計算)
+    const baseScore = Math.round(((config[simMode].base - config[simMode].min) * dmgRate) + config[simMode].min);
+    const scoreWithBonus = Math.round(baseScore * bonusRate);
+    const resScorePerTime = Math.min(scoreWithBonus, config[simMode].max);
+    const totalScore = resScorePerTime * boost;
+    const scorePerTicket = target.ticket > 0 ? Math.floor(resScorePerTime / target.ticket) : 0;
 
-        // 表示部分の修正
-        document.getElementById('sim_result').innerHTML = `
-            <p><strong>判定結果: ${simMode === 'N' ? 'ノーマル' : simMode === 'H' ? 'ハード' : 'ベリーハード'} (ブースト×${boost})</strong></p>
-            <ul>
-                <li>ダメージ率: <strong>${(dmgRate * 100).toFixed(1)}%</strong></li>
-                <li>合計獲得GP: <strong>${formatNum(totalGP)} pt (${formatNum(resGPPerTime)} pt)</strong></li>
-                <li>合計獲得スコア: <strong>${formatNum(totalScore)} (${formatNum(resScorePerTime)})</strong></li>
-                <li>効率(1枚あたり): <strong>${formatNum(scorePerTicket)}</strong></li>
-            </ul>
-            ${compareText}
-        `;
+    // 5. 表示更新
+    document.getElementById('current_rate').value = (dmgRate * 100).toFixed(1);
+
+    // 比較ロジック
+    const modeNames = { N: "ノーマル", H: "ハード", VH: "ベリーハード" };
+    let compareText = "";
+    const nMaxEff = Math.floor(config.N.max / CONFIG.stats.N.ticket);
+    const hMaxEff = Math.floor(config.H.max / CONFIG.stats.H.ticket);
+    
+    if (simMode === "H") {
+        const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
+        compareText = `<p>ノーマル最大効率比: <strong>${diffN}%</strong></p>`;
+    } else if (simMode === "VH") {
+        const diffN = nMaxEff > 0 ? (scorePerTicket / nMaxEff * 100).toFixed(1) : "0";
+        const diffH = hMaxEff > 0 ? (scorePerTicket / hMaxEff * 100).toFixed(1) : "0";
+        compareText = `<p>ノーマル最大効率比: <strong>${diffN}%</strong><br>ハード最大効率比: <strong>${diffH}%</strong></p>`;
     }
+
+    // ★重要：ここで確実に HTML を注入します
+    const resultDiv = document.getElementById('sim_result');
+    resultDiv.innerHTML = `
+        <p><strong>判定結果: ${modeNames[simMode]} (ブースト×${boost})</strong></p>
+        <ul>
+            <li>ダメージ率: <strong>${(dmgRate * 100).toFixed(1)}%</strong></li>
+            <li>合計獲得GP: <strong>${formatNum(totalGP)} pt (${formatNum(resGPPerTime)} pt)</strong></li>
+            <li>合計獲得スコア: <strong>${formatNum(totalScore)} (${formatNum(resScorePerTime)})</strong></li>
+            <li>効率(1枚あたり): <strong>${formatNum(scorePerTicket)}</strong></li>
+        </ul>
+        ${compareText}`;
+}
 
     init();
 </script>
