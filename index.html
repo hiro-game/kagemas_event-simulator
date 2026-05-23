@@ -31,6 +31,13 @@
             box-shadow: 0 4px 6px -4px rgba(0,0,0,0.1);
         }
 
+/* スマホ用：デフォルトで非表示、ボタン表示 */
+@media (max-width: 600px) {
+    .settings-body { display: none; }
+    .toggle-btn { display: inline-block !important; }
+}
+.toggle-btn { display: none; cursor: pointer; background: var(--primary-color); color: white; border: none; padding: 4px 12px; border-radius: 4px; font-size: 0.7rem; }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -185,45 +192,47 @@
 
 <div class="sticky-header">
     <div class="container" style="padding-bottom: 0;">
-        <div class="top-bar">
-            <span>桁区切り表示</span>
-            <label class="switch">
-                <input type="checkbox" id="comma_toggle" checked onchange="handleCommaToggle()">
-                <span class="slider"></span>
-            </label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h1 style="margin: 0; font-size: 1.25rem;">カゲマス イベントシミュレータ</h1>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: bold; white-space: nowrap;">
+                桁区切り表示
+                <label class="switch">
+                    <input type="checkbox" id="comma_toggle" checked onchange="handleCommaToggle()">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
-
-        <header>
-            <h1>カゲマス 討伐イベント ダメージシミュレーター</h1>
-        </header>
-
         <div class="card">
-            <h2 style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 1. ボスHP・ボーナス設定
-                <button onclick="resetSettings()" style="font-size: 0.7rem; padding: 2px 8px; cursor: pointer; border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 4px; color: #1e40af;">初期値に戻す</button>
+                <div>
+                    <button class="toggle-btn" onclick="toggleSettings()">開閉</button>
+                    <button onclick="resetSettings()" style="font-size: 0.7rem; padding: 2px 8px; cursor: pointer; border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 4px; color: #1e40af;">初期値に戻す</button>
+                </div>
             </h2>
-            <div class="grid">
-                <div class="input-group">
-                    <label>ボーナススコア (%)</label>
-                    <input type="text" id="bonus" class="styled-input" data-step="1">
-                </div>
-                <div class="input-group">
-                    <label>ノーマル 最大HP</label>
-                    <input type="text" id="hp_n" class="styled-input" data-step="100000">
-                </div>
-                <div class="input-group">
-                    <label>ハード 最大HP</label>
-                    <input type="text" id="hp_h" class="styled-input" data-step="100000">
-                </div>
-                <div class="input-group">
-                    <label>ベリーハード 最大HP</label>
-                    <input type="text" id="hp_vh" class="styled-input" data-step="1000000">
+            <div class="settings-body" id="settings-body">
+                <div class="grid">
+                    <div class="input-group">
+                        <label>ボーナススコア (%)</label>
+                        <input type="text" id="bonus" class="styled-input" data-step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>ノーマル 最大HP</label>
+                        <input type="text" id="hp_n" class="styled-input" data-step="100000">
+                    </div>
+                    <div class="input-group">
+                        <label>ハード 最大HP</label>
+                        <input type="text" id="hp_h" class="styled-input" data-step="100000">
+                    </div>
+                    <div class="input-group">
+                        <label>ベリーハード 最大HP</label>
+                        <input type="text" id="hp_vh" class="styled-input" data-step="1000000">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 <div class="container" style="padding-top: 20px;">
     <div class="card">
         <h2>2. 難易度移行の損益分岐ライン</h2>
@@ -475,7 +484,6 @@
         calculate();
     }
 
-    // --- 共通スコア計算ロジック ---
     // --- 共通スコア計算ロジック（ギルドポイント・討伐スコア両対応） ---
     function calculateLines() {
         const bonusRate = (parseNum(document.getElementById('bonus').value) / 100) + 1;
@@ -584,6 +592,11 @@
             </ul>
             ${compareText}`;
     }
+
+function toggleSettings() {
+    const body = document.getElementById('settings-body');
+    body.style.display = (body.style.display === 'none' || body.style.display === '') ? 'block' : 'none';
+}
 
     init();
 </script>
