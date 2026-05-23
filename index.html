@@ -299,37 +299,9 @@ async function init() {
         if (!response.ok) throw new Error('Network response was not ok');
         bossData = await response.json();
         
-        // 1. HPの初期値セット（JSON取得後）
-        document.getElementById('hp_n').value = formatNum(bossData.N.hp);
-        document.getElementById('hp_h').value = formatNum(bossData.H.hp);
-        document.getElementById('hp_vh').value = formatNum(bossData.VH.hp);
-        
-        // 2. 自動保存用のリスナー登録
-        const saveInputIds = ['comma_toggle', 'bonus', 'hp_n', 'hp_h', 'hp_vh', 'sim_mode', 'boost_rate', 'current_dmg'];
-        saveInputIds.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('change', saveSettings);
-            }
-        });
-
-        // 3. 入力欄の フォーカス/ブラー イベント管理（カンマ処理の統合）
-        const textInputs = ['bonus', 'hp_n', 'hp_h', 'hp_vh', 'current_dmg', 'current_rate'];
-        textInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('blur', () => {
-                const isRate = (id === 'current_rate');
-                el.value = formatNum(parseNum(el.value), isRate);
-                updateAll();
-            });
-            el.addEventListener('focus', () => {
-                el.value = parseNum(el.value);
-            });
-        });
-
-        // 4. ローカルストレージ読み込み
+        // 1. ローカルストレージ読み込み
         const saved = localStorage.getItem(CONFIG.storageKey);
+        
         if (saved) {
             const s = JSON.parse(saved);
             document.getElementById('comma_toggle').checked = s.comma;
@@ -341,15 +313,33 @@ async function init() {
             document.getElementById('boost_rate').value = s.boost || 5;
             document.getElementById('current_dmg').value = formatNum(s.dmg || 0);
             document.getElementById('current_rate').value = s.rate || 0;
-
-            updateAll();
         } else {
-            // ストレージがない場合、初期値0で計算を走らせる
+            // 初回起動時：各フォームに初期値（0またはJSONの値）を代入
             document.getElementById('bonus').value = 0;
+            document.getElementById('hp_n').value = formatNum(bossData.N.hp);
+            document.getElementById('hp_h').value = formatNum(bossData.H.hp);
+            document.getElementById('hp_vh').value = formatNum(bossData.VH.hp);
             document.getElementById('current_dmg').value = 0;
             document.getElementById('current_rate').value = 0;
-            updateAll();
         }
+
+        // 2. イベントリスナー登録
+        const inputIds = ['comma_toggle', 'bonus', 'hp_n', 'hp_h', 'hp_vh', 'sim_mode', 'boost_rate', 'current_dmg'];
+        inputIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                // 入力があるたびに保存と計算を走らせる
+                el.addEventListener('input', () => {
+                    saveSettings();
+                    updateAll();
+                });
+                el.addEventListener('change', saveSettings);
+            }
+        });
+
+        // 3. 確実に計算を実行
+        updateAll();
+        
     } catch (e) {
         console.error("初期化エラー:", e);
     }
