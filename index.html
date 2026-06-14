@@ -267,7 +267,12 @@
                     <option value="2">×2</option>
                     <option value="3">×3</option>
                     <option value="4">×4</option>
-                    <option value="5" selected>×5</option>
+                    <option value="5">×5</option>
+                    <option value="6">×6</option>
+                    <option value="7">×7</option>
+                    <option value="8">×8</option>
+                    <option value="4">×4</option>
+                    <option value="10" selected>×10</option>
                 </select>
             </div>
             <div class="input-group">
@@ -558,16 +563,15 @@
             rateEl.value = (dmgRate * 100).toFixed(1);
         }
 
-        // 3. GP・スコア計算
+// 3. GP・スコア計算
         const resGPPerTime = Math.min(Math.floor(target.gp * dmgRate), target.gp);
         const totalGP = resGPPerTime * boost;
 
-        const baseScore = Math.round(((target.base - target.min) * dmgRate) + target.min);
-        const scoreWithBonus = Math.round(baseScore * bonusRate);
+        const baseScore = Math.floor(((target.base - target.min) * dmgRate) + target.min);
+        const scoreWithBonus = Math.floor(baseScore * bonusRate);
         const resScorePerTime = Math.min(scoreWithBonus, target.max);
         const totalScore = resScorePerTime * boost;
         const scorePerTicket = target.ticket > 0 ? Math.floor(resScorePerTime / target.ticket) : 0;
-
         // 4. 結果出力
         const nMaxEff = Math.floor(CONFIG.scoreConfig.N.max / CONFIG.scoreConfig.N.ticket);
         const hMaxEff = Math.floor(CONFIG.scoreConfig.H.max / CONFIG.scoreConfig.H.ticket);
