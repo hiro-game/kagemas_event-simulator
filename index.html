@@ -567,7 +567,7 @@
         const resGPPerTime = Math.min(Math.floor(target.gp * dmgRate), target.gp);
         const totalGP = resGPPerTime * boost;
 
-        const baseScore = Math.floor(((target.base - target.min) * dmgRate) + target.min);
+    　　const baseScore = Math.floor(((target.base - target.min) * dmgRate) + target.min + 0.3);
         const scoreWithBonus = Math.floor(baseScore * bonusRate);
         const resScorePerTime = Math.min(scoreWithBonus, target.max);
         const totalScore = resScorePerTime * boost;
